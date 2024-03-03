@@ -1,5 +1,6 @@
 package com.softuni.modelmapper;
 
+import com.google.gson.Gson;
 import com.softuni.modelmapper.dtos.AddressDto;
 import com.softuni.modelmapper.dtos.CreateEmployeeDto;
 import com.softuni.modelmapper.dtos.ManagerDto;
@@ -19,11 +20,13 @@ public class AppMain implements CommandLineRunner {
     private final AddressService addressService;
     private final EmployeeService employeeService;
     private final Scanner scanner;
+    private final Gson gson;
 
     @Autowired
-    public AppMain(AddressService addressService, EmployeeService employeeService) {
+    public AppMain(AddressService addressService, EmployeeService employeeService, Gson gson) {
         this.addressService = addressService;
         this.employeeService = employeeService;
+        this.gson = gson;
         this.scanner = new Scanner(System.in);
     }
 
@@ -41,8 +44,17 @@ public class AppMain implements CommandLineRunner {
                         )
                 );
 
+        CreateEmployeeDto createEmployeeDtoFromJson = gson.fromJson("{\"firstName\":\"FirstNameDTO\",\"lastName\":\"LastNameDTO\",\"salary\":10,\"birthday\":\"1890-01-01\",\"address\":{\"name\":\"AddressDTO\"},\"manager\":{\"firstName\":\"FirstNameManagerDTO\",\"lastName\":\"LastNameManagerDTO\",\"employees\":[]}}", CreateEmployeeDto.class);
+
+        System.out.println(gson.toJson(createEmployeeDtoFromJson));
+
+        employeeService.createEmployee(createEmployeeDtoFromJson);
+
         employeeService
                 .findAllByBirthdayBeforeOrderBySalaryDesc(LocalDate.of(1990, 1, 1))
                 .forEach(System.out::println);
+
+        System.out.println(gson.toJson(employeeService
+                .findAllByBirthdayBeforeOrderBySalaryDesc(LocalDate.of(1990, 1, 1))));
     }
 }

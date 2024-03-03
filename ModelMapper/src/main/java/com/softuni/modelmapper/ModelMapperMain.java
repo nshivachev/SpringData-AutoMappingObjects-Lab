@@ -1,5 +1,6 @@
 package com.softuni.modelmapper;
 
+import com.google.gson.*;
 import com.softuni.modelmapper.dtos.EmployeeAddressDto;
 import com.softuni.modelmapper.dtos.ManagerDto;
 import com.softuni.modelmapper.entities.Address;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Component
@@ -19,6 +21,12 @@ public class ModelMapperMain implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
+
+        Gson gson = new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(LocalDate.class, (JsonSerializer<LocalDate>) (localDate, type, jsonSerializationContext) -> new JsonPrimitive(localDate.format(DateTimeFormatter.ISO_LOCAL_DATE)))
+                .registerTypeAdapter(LocalDate.class, (JsonDeserializer<LocalDate>) (jsonElement, type, jsonDeserializationContext) -> LocalDate.parse(jsonElement.getAsJsonPrimitive().getAsString()))
+                .create();
 
         //Task 1
         Employee employee = Employee.builder()
@@ -31,10 +39,12 @@ public class ModelMapperMain implements CommandLineRunner {
                 .build();
 
         EmployeeAddressDto employeeAddressDto = modelMapper.map(employee, EmployeeAddressDto.class);
-
         System.out.println(employeeAddressDto);
 
-        //PropertyMapper
+        EmployeeAddressDto employeeAddressDtoFromJson = gson.fromJson("{\"firstName\":\"Niki\",\"lastName\":\"Sh\",\"salary\":10,\"birthday\":\"1990-10-31\",\"addressName\":\"21 str, Yambol\"}", EmployeeAddressDto.class);
+        System.out.println(gson.toJson(employeeAddressDtoFromJson));
+
+//        //PropertyMapper
 //        PropertyMap<Employee, EmployeeAddressDto> propertyMap = new PropertyMap<Employee, EmployeeAddressDto>() {
 //            @Override
 //            protected void configure() {
@@ -43,8 +53,8 @@ public class ModelMapperMain implements CommandLineRunner {
 //        };
 //        modelMapper.addMappings(propertyMap);
 //        EmployeeAddressDto employeeAddressDto = modelMapper.map(employee, EmployeeAddressDto.class);
-
-        //TypeMapper
+//
+//        //TypeMapper
 //        TypeMap<Employee, EmployeeAddressDto> typeMap = modelMapper.createTypeMap(Employee.class, EmployeeAddressDto.class);
 //        typeMap.addMappings(mapping -> mapping.map(
 //                source -> source.getAddress().getName(),
@@ -66,5 +76,11 @@ public class ModelMapperMain implements CommandLineRunner {
                 Employee.builder().firstName("Carl").lastName("Kormac").address(new Address("16 str.")).employees(employeesSecondGroups).build());
 
         managers.stream().map(e -> modelMapper.map(e, ManagerDto.class)).forEach(System.out::println);
+
+        List<ManagerDto> managerDtoFromJson = List.of(
+                gson.fromJson("{\"firstName\":\"Steve\",\"lastName\":\"Jobbsen\",\"address\":{\"name\":\"15 str.\"}, employees:[{\"firstName\":\"Stephen\",\"lastName\":\"Bjorn\", \"salary\":150}]}", ManagerDto.class),
+                gson.fromJson("{\"firstName\":\"Carl\",\"lastName\":\"Kormac\",\"address\":{\"name\":\"16 str.\"}, \"employees\":[{\"firstName\":\"Jurgen\",\"lastName\":\"Straus\", \"salary\":200}]}", ManagerDto.class));
+
+        System.out.println(gson.toJson(managerDtoFromJson));
     }
 }

@@ -1,5 +1,6 @@
 package com.softuni.modelmapper.entities;
 
+import com.google.gson.annotations.Expose;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class Employee {
     @Column(name = "first_name")
     private String firstName;
 
+    @Expose
     @Column(name = "last_name")
     private String lastName;
 
@@ -40,6 +42,6 @@ public class Employee {
     @ManyToOne(cascade = CascadeType.PERSIST)
     private Employee manager;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
+    @OneToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     private List<Employee> employees;
 }
